@@ -1,5 +1,6 @@
 #include <defs.h>
-
+#include <stdio.h>
+int glob;
 void start(void* modulep, void* physbase, void* physfree)
 {
 	// kernel starts here
@@ -14,7 +15,6 @@ void boot(void)
 {
 	// note: function changes rsp, local stack variables can't be practically used
 	volatile register char *rsp asm ("rsp");
-	volatile register char *temp1, *temp2;
 	loader_stack = (uint32_t*)rsp;
 	rsp = &stack[INITIAL_STACK_SIZE];
 	start(
@@ -22,10 +22,14 @@ void boot(void)
 		&physbase,
 		(void*)(uint64_t)loader_stack[4]
 	);
-	for(
-		temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
-		*temp1;
-		temp1 += 1, temp2 += 2
-	) *temp2 = *temp1;
+//	while(1);
+	printf("Print a string: %s","abc\n");
+	printf("Print a char: %c",'x');
+//	char c = NULL;
+	putchar((unsigned char)'\n');
+//	printf("Print a empty char: %c",c);
+	printf("Print both: %s %c\n", "abc ",'y');
+	printf("Print int:%x %d %x\n",13,-33,33);
+	printf("Print a address: %p\n",&glob);
 	while(1);
 }
