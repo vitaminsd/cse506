@@ -1,8 +1,9 @@
 #include <defs.h>
 #include <stdarg.h>
+#include <mem.h>
 #define COLOR 0x07
 #define COLS 80
-#define ROW 25
+#define ROWS 25
 #define VGA_START 0xB8000
 #define PRINTABLE(c) (c>=' ')
 //uint32_t char
@@ -21,8 +22,11 @@ void update_cursor(int row, int col);
 //	outb(0x3D5,(unsigned char)((position>>8)&0xFF));
 //}	
 void scroll(){
-
-
+    memcpy((unsigned char *)VGA_START, (unsigned char *)(VGA_START+2*COLS), 2*(ROWS-1)*COLS);
+    memset((unsigned char *)(VGA_START+2*(ROWS-1)*COLS),0,2*COLS);
+    Curx = 0;
+    Cury = ROWS-1;
+    return;
 }
 
 void itoa(char *buf, int base, int d){
@@ -68,6 +72,9 @@ void putchar(char c){
 	{
 		Curx = 0;
 		Cury ++;
+		if (Cury >= ROWS){
+			scroll();
+		}
 	}
 	else if (c == 0x08 &&Curx != 0) 
 		Curx --;//backspace
@@ -77,7 +84,14 @@ void putchar(char c){
 		addr =(char*) VGA_START+2*(Cury*COLS+Curx);
 		*addr =(COLOR<<8)|c;
 		Curx ++;
-		
+		if (Curx >= COLS){
+			Cury += Curx / COLS;
+			Curx = Curx%COLS;
+		}
+		if (Cury >= ROWS){
+			scroll();
+		}
+
 	}
 }
 
