@@ -1,6 +1,8 @@
 #include <defs.h>
 #include <stdio.h>
-int glob;
+#include <sys/gdt.h>
+int glob = 0;
+
 void start(void* modulep, void* physbase, void* physfree)
 {
 	// kernel starts here
@@ -17,6 +19,13 @@ void boot(void)
 	volatile register char *rsp asm ("rsp");
 	loader_stack = (uint32_t*)rsp;
 	rsp = &stack[INITIAL_STACK_SIZE];
+	__asm__(
+		"movq %%rsp, %0;"
+		"movq %1, %%rsp;"
+		:"=g"(loader_stack)
+		:"r"(&stack[INITIAL_STACK_SIZE])
+	);
+	reload_gdt();
 	start(
 		(char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase,
 		&physbase,
